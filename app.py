@@ -257,7 +257,13 @@ def create_ui():
             try:
                 # Check if model is loaded before attempting to generate
                 if model is None:
-                    error_msg = "Model is not loaded. Please authenticate with a valid Hugging Face token."
+                    error_msg = "Model is not loaded. Please authenticate with a valid Hugging Face token and restart the application."
+                    logger.error(error_msg)
+                    return None, -1, f"❌ {error_msg}"
+
+                # Additional check for pretransform attribute to catch partially loaded models
+                if not hasattr(model, 'pretransform'):
+                    error_msg = "Model was loaded incorrectly. Please restart the application with a valid Hugging Face token."
                     logger.error(error_msg)
                     return None, -1, f"❌ {error_msg}"
 
@@ -275,6 +281,8 @@ def create_ui():
                 # Provide a more user-friendly error message
                 if "model is not loaded" in str(e).lower() or "model is none" in str(e).lower():
                     return None, -1, f"❌ Authentication required: {str(e)}"
+                elif "pretransform" in str(e).lower():
+                    return None, -1, f"❌ Model not properly loaded. Please restart the application with a valid token."
                 else:
                     return None, -1, f"❌ Error after {elapsed:.2f} seconds: {str(e)}"
             except Exception as e:
@@ -283,6 +291,10 @@ def create_ui():
                 logger.error(traceback.format_exc())
                 end_time = time.time()
                 elapsed = end_time - start_time
+                
+                # Check for pretransform error specifically
+                if "pretransform" in str(e).lower():
+                    return None, -1, f"❌ Model not properly loaded. Please restart the application with a valid token."
                 return None, -1, f"❌ Error after {elapsed:.2f} seconds: {str(e)}"
 
         generate_btn.click(
@@ -364,7 +376,7 @@ def create_auth_ui():
     with gr.Blocks(title="Stable Audio Authentication") as auth_app:
         gr.Markdown("# 🔐 Stable Audio Authentication")
         gr.Markdown(f"""
-        The model `{MODEL_ID}` requires authentication to access.
+        ## The model `{MODEL_ID}` requires authentication to access.
 
         This is a gated model on Hugging Face Hub that requires you to:
         1. Have a Hugging Face account
@@ -382,37 +394,64 @@ def create_auth_ui():
 
         auth_status = gr.Textbox(label="Authentication Status", interactive=False)
 
-        def authenticate_and_load(token):
+        def authenticate_and_save(token):
             if not token or token.strip() == "":
                 return "❌ Please enter a valid token"
 
             try:
-                global model, model_config, sample_rate, sample_size
-                model, model_config, sample_rate, sample_size = load_model(token)
-
-                # Authentication successful
-                logger.info("Authentication successful")
-                return "✅ Authentication successful! Please restart the application to launch the main UI."
+                # Save token to environment variable
+                os.environ["HF_TOKEN"] = token
+                
+                # Try to authenticate with the token (using write_permission=True)
+                from huggingface_hub import login
+                login(token=token, write_permission=True)
+                
+                try:
+                    # Verify authentication and check model access
+                    global model, model_config, sample_rate, sample_size
+                    model, model_config, sample_rate, sample_size = load_model(token)
+                    
+                    return "✅ Authentication successful! Please restart the application to use the model."
+                except Exception as e:
+                    if "access" in str(e).lower():
+                        return f"❌ You don't have access to the model {MODEL_ID}. Please request access on the Hugging Face Hub."
+                    else:
+                        return f"❌ Authentication failed: {str(e)}"
             except Exception as e:
                 logger.error(f"Authentication failed: {str(e)}")
                 return f"❌ Authentication failed: {str(e)}"
 
         auth_btn.click(
-            fn=authenticate_and_load,
+            fn=authenticate_and_save,
             inputs=[token_input],
             outputs=[auth_status]
         )
 
-        gr.Markdown("""
-        ## Instructions
+        gr.Markdown(f"""
+        ## Alternative Authentication Methods
+        
+        ### 1. Use the run_with_auth.py script (recommended):
+        ```
+        python run_with_auth.py --token your_huggingface_token
+        ```
 
-        1. Go to [Hugging Face Settings](https://huggingface.co/settings/tokens) to create a new token
-        2. Copy the token and paste it above
-        3. Click "Authenticate"
-        4. If successful, wait for the confirmation message
-        5. Restart the application manually to launch the main UI
+        ### 2. Set the environment variable and run manually:
+        ```
+        export HF_TOKEN=your_huggingface_token
+        python run.py
+        ```
 
-        You can also set the `HF_TOKEN` environment variable to your token to avoid this step in the future.
+        ### 3. Provide the token as a command-line argument:
+        ```
+        python run.py --token your_huggingface_token
+        ```
+        
+        ## Troubleshooting
+        
+        If you see "'NoneType' object has no attribute 'pretransform'" error:
+        1. Make sure you have a valid token with access to the model
+        2. Restart the application after authentication
+        3. Try using the run_with_auth.py script instead
         """)
 
     logger.info("Launching authentication UI")

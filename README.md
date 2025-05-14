@@ -40,39 +40,47 @@ The Stable Audio model (`stabilityai/stable-audio-open-small`) is a gated model 
 
 There are three ways to authenticate:
 
-### Option 1: Use the authentication UI
+### Option 1: Use the simplified authentication script (recommended)
+
+```bash
+python run_with_auth.py --token YOUR_HF_TOKEN
+```
+
+This script handles authentication and then launches the main application once it's successful.
+
+### Option 2: Use the authentication UI
 
 1. Run the application without authentication:
 ```bash
-python app.py
+python run.py
 ```
 2. If you're not authenticated, an authentication UI will appear
 3. Enter your Hugging Face token and click "Authenticate"
-4. The application will automatically transition to the main UI after successful authentication
+4. After successful authentication, restart the application to load the model properly
 
-### Option 2: Use the command-line argument
+### Option 3: Use the command-line argument
 
 ```bash
-python app.py --token YOUR_HF_TOKEN
+python run.py --token YOUR_HF_TOKEN
 ```
 
-### Option 3: Set an environment variable
+### Option 4: Set an environment variable
 
 ```bash
 # On Windows
 set HF_TOKEN=YOUR_HF_TOKEN
-python app.py
+python run.py
 
 # On Linux/Mac
 export HF_TOKEN=YOUR_HF_TOKEN
-python app.py
+python run.py
 ```
 
 ## Usage
 
 1. Run the application (with authentication as described above):
 ```bash
-python app.py
+python run.py
 ```
 
 2. Open your web browser and navigate to `http://127.0.0.1:7860`
@@ -94,7 +102,7 @@ python app.py
 The application supports several command-line options for debugging and configuration:
 
 ```bash
-python app.py --help
+python run.py --help
 ```
 
 Available options:
@@ -127,7 +135,11 @@ Additionally, the UI displays generation time for each audio sample.
 
 ### Common Issues
 
-- **"NoneType object has no attribute 'pretransform'"**: This error occurs when the model fails to load properly. Make sure you're authenticated with a valid Hugging Face token and have access to the model.
+- **"NoneType object has no attribute 'pretransform'"**: This error occurs when the model fails to load properly. To fix this:
+  1. Ensure you have a valid Hugging Face token with access to the model
+  2. Try using the `run_with_auth.py` script instead: `python run_with_auth.py --token YOUR_HF_TOKEN`
+  3. If using the authentication UI, make sure to restart the application after successful authentication
+  4. Check that you have requested and been granted access to the model on Hugging Face Hub
 
 - **Authentication Errors**: Make sure you have requested and been granted access to the model on Hugging Face Hub.
 
