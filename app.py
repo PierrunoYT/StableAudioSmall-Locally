@@ -457,7 +457,7 @@ def create_auth_ui():
     logger.info("Launching authentication UI")
     auth_app.launch(share=False)
 
-# Global variables for model
+# Global variables for model - defined at module level to ensure they're accessible throughout
 model = None
 model_config = None
 sample_rate = None
@@ -469,6 +469,7 @@ if __name__ == "__main__":
     try:
         # Try to load the model with environment authentication
         logger.info("Attempting to load model with environment authentication")
+        global model, model_config, sample_rate, sample_size
         model, model_config, sample_rate, sample_size = load_model()
 
         # If we get here, model loaded successfully

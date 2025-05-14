@@ -30,18 +30,35 @@ def main():
         if check_model_access("stabilityai/stable-audio-open-small"):
             print("\n✅ Authentication successful! Starting Stable Audio...\n")
             
-            # Run the app with the token already set in environment
-            cmd = [sys.executable, "run.py"]
-            if args.port:
-                cmd.extend(["--port", str(args.port)])
-            if args.share:
-                cmd.append("--share")
-            if args.debug:
-                cmd.append("--debug")
-                
-            # Execute the app
+            # Instead of subprocess, directly import and run the app
+            # This ensures we use the same Python interpreter and global variables
+            print("\nStarting Stable Audio application...")
+            
+            # Import the necessary modules
+            import app
+            from app import create_ui, load_model
+            import sys
+            
+            # Update the global model variables directly
             try:
-                subprocess.run(cmd)
+                print("Loading model...")
+                app.model, app.model_config, app.sample_rate, app.sample_size = load_model()
+                
+                # Create and launch UI
+                print("Creating UI...")
+                ui = create_ui()
+                
+                # Launch with the appropriate parameters
+                share = args.share
+                port = args.port or 7860
+                debug = args.debug
+                
+                print(f"Launching server on port {port} (share={share})...")
+                ui.launch(
+                    server_port=port,
+                    share=share,
+                    debug=debug
+                )
             except KeyboardInterrupt:
                 print("\nApplication stopped by user.")
         else:

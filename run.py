@@ -34,11 +34,14 @@ if __name__ == "__main__":
         logger.info("Using token from command line")
 
     # Load model
-    global model, model_config, sample_rate, sample_size
+    # Note: These are already defined as global in app.py
     logger.info("Initializing Stable Audio...")
     try:
         # Try to load the model with authentication
-        model, model_config, sample_rate, sample_size = load_model()
+        from app import model, model_config, sample_rate, sample_size
+        # Update the global variables in the app module
+        import app as app_module
+        app_module.model, app_module.model_config, app_module.sample_rate, app_module.sample_size = load_model()
 
         # Log memory usage after model loading
         if args.debug:
