@@ -1,0 +1,5 @@
+gradio>=5.20.0
+torch>=2.5.1
+torchaudio>=2.5.1
+stable-audio-tools>=0.0.19
+einops>=0.8.1

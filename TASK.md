@@ -1,0 +1,43 @@
+# Stable Audio Web UI Task
+
+## Task Description
+Create a Gradio web UI for Stability AI's Stable Audio tools based on the official repository and model.
+
+## Implementation Details
+
+### Files Created
+- `app.py`: Main application file containing the Gradio UI and audio generation logic
+- `run.py`: Script to run the application with command-line arguments
+- `README.md`: Documentation for the project
+- `requirements.txt`: List of required packages
+
+### Features Implemented
+- Text-to-audio generation using the stable-audio-open-small model
+- Adjustable parameters:
+  - Duration (1-11 seconds)
+  - Sampling steps
+  - CFG scale
+  - Seed for reproducibility
+- Example prompts for quick testing
+- Audio playback in the browser
+- Saving generated audio files
+
+### Model Used
+- Model ID: stabilityai/stable-audio-open-small
+- A latent diffusion model based on a transformer architecture
+- Generates variable-length (up to 11s) stereo audio at 44.1kHz from text prompts
+
+## How to Run
+1. Install dependencies: `pip install -r requirements.txt`
+2. Run the application: `python run.py`
+3. Optional arguments:
+   - `--share`: Create a publicly shareable link
+   - `--port`: Specify port (default: 7860)
+   - `--server-name`: Specify server name (default: 127.0.0.1)
+
+## Future Improvements
+- Add more advanced parameters for audio generation
+- Implement batch generation
+- Add audio editing capabilities
+- Support for model fine-tuning
+- Add visualization of the generated audio waveform
