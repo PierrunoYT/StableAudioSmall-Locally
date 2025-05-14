@@ -469,7 +469,7 @@ if __name__ == "__main__":
     try:
         # Try to load the model with environment authentication
         logger.info("Attempting to load model with environment authentication")
-        global model, model_config, sample_rate, sample_size
+        # Use the global variables defined at module level
         model, model_config, sample_rate, sample_size = load_model()
 
         # If we get here, model loaded successfully
