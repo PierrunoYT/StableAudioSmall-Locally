@@ -390,19 +390,9 @@ def create_auth_ui():
                 global model, model_config, sample_rate, sample_size
                 model, model_config, sample_rate, sample_size = load_model(token)
 
-                # Create and launch the main UI after successful authentication
-                logger.info("Authentication successful, launching main UI")
-                auth_app.close()  # Close the auth UI
-
-                # Create and launch the main UI in a new thread to avoid blocking
-                import threading
-                def launch_main_ui():
-                    app = create_ui()
-                    app.launch(share=False)
-
-                threading.Thread(target=launch_main_ui).start()
-
-                return "✅ Authentication successful! Launching the main application..."
+                # Authentication successful
+                logger.info("Authentication successful")
+                return "✅ Authentication successful! Please restart the application to launch the main UI."
             except Exception as e:
                 logger.error(f"Authentication failed: {str(e)}")
                 return f"❌ Authentication failed: {str(e)}"
@@ -419,7 +409,8 @@ def create_auth_ui():
         1. Go to [Hugging Face Settings](https://huggingface.co/settings/tokens) to create a new token
         2. Copy the token and paste it above
         3. Click "Authenticate"
-        4. If successful, restart the application
+        4. If successful, wait for the confirmation message
+        5. Restart the application manually to launch the main UI
 
         You can also set the `HF_TOKEN` environment variable to your token to avoid this step in the future.
         """)

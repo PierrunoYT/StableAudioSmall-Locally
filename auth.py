@@ -33,7 +33,7 @@ def login_with_token(token):
             return False
             
         # Try to login with the provided token
-        login(token=token)
+        login(token=token, write_permission=True)  # Save the token to disk cache
         
         # Verify authentication was successful
         if is_authenticated():
