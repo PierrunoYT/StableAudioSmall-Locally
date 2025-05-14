@@ -5,3 +5,5 @@ stable-audio-tools>=0.0.19
 huggingface_hub>=0.20.3
 einops>=0.8.1
 psutil>=5.9.0
+transformers>=4.38.0
+accelerate>=0.27.0

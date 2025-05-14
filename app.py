@@ -115,6 +115,12 @@ def generate_audio(
     logger.info(f"  CFG Scale: {cfg_scale}")
 
     try:
+        # Check if model is loaded
+        if model is None:
+            error_msg = "Model is not loaded. Please authenticate with a valid Hugging Face token and restart the application."
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+
         # Set seed for reproducibility
         if seed == -1:
             seed = torch.randint(0, 2**32 - 1, (1,)).item()
@@ -141,6 +147,10 @@ def generate_audio(
         logger.debug(f"Starting diffusion process with {steps} steps")
 
         with Timer("diffusion_generation"):
+            # Double-check model is not None before proceeding
+            if model is None:
+                raise ValueError("Model is None. Authentication may have failed or model failed to load.")
+
             output = generate_diffusion_cond(
                 model,
                 steps=steps,
@@ -245,16 +255,35 @@ def create_ui():
         def wrapped_generate_audio(*args):
             start_time = time.time()
             try:
+                # Check if model is loaded before attempting to generate
+                if model is None:
+                    error_msg = "Model is not loaded. Please authenticate with a valid Hugging Face token."
+                    logger.error(error_msg)
+                    return None, -1, f"❌ {error_msg}"
+
                 output_path, seed = generate_audio(*args)
                 end_time = time.time()
                 elapsed = end_time - start_time
-                return output_path, seed, f"{elapsed:.2f} seconds"
+                return output_path, seed, f"✅ Generated in {elapsed:.2f} seconds"
+            except ValueError as e:
+                # Handle authentication and model loading errors
+                logger.error(f"Value error in wrapped_generate_audio: {str(e)}")
+                logger.error(traceback.format_exc())
+                end_time = time.time()
+                elapsed = end_time - start_time
+
+                # Provide a more user-friendly error message
+                if "model is not loaded" in str(e).lower() or "model is none" in str(e).lower():
+                    return None, -1, f"❌ Authentication required: {str(e)}"
+                else:
+                    return None, -1, f"❌ Error after {elapsed:.2f} seconds: {str(e)}"
             except Exception as e:
+                # Handle other errors
                 logger.error(f"Error in wrapped_generate_audio: {str(e)}")
                 logger.error(traceback.format_exc())
                 end_time = time.time()
                 elapsed = end_time - start_time
-                return None, -1, f"Error after {elapsed:.2f} seconds: {str(e)}"
+                return None, -1, f"❌ Error after {elapsed:.2f} seconds: {str(e)}"
 
         generate_btn.click(
             fn=wrapped_generate_audio,
@@ -360,8 +389,22 @@ def create_auth_ui():
             try:
                 global model, model_config, sample_rate, sample_size
                 model, model_config, sample_rate, sample_size = load_model(token)
-                return "✅ Authentication successful! You can now close this tab and restart the application."
+
+                # Create and launch the main UI after successful authentication
+                logger.info("Authentication successful, launching main UI")
+                auth_app.close()  # Close the auth UI
+
+                # Create and launch the main UI in a new thread to avoid blocking
+                import threading
+                def launch_main_ui():
+                    app = create_ui()
+                    app.launch(share=False)
+
+                threading.Thread(target=launch_main_ui).start()
+
+                return "✅ Authentication successful! Launching the main application..."
             except Exception as e:
+                logger.error(f"Authentication failed: {str(e)}")
                 return f"❌ Authentication failed: {str(e)}"
 
         auth_btn.click(
@@ -395,10 +438,28 @@ if __name__ == "__main__":
     print("Initializing Stable Audio...")
     try:
         # Try to load the model with environment authentication
+        logger.info("Attempting to load model with environment authentication")
         model, model_config, sample_rate, sample_size = load_model()
+
+        # If we get here, model loaded successfully
+        logger.info("Model loaded successfully, launching main UI")
         app = create_ui()
         app.launch(share=False)
-    except Exception as e:
-        logger.error(f"Failed to initialize model: {str(e)}")
-        # If model loading fails, create a UI with authentication
+    except ValueError as e:
+        # Authentication or access errors
+        logger.error(f"Authentication error: {str(e)}")
+        logger.info("Launching authentication UI")
         create_auth_ui()
+    except Exception as e:
+        # Other unexpected errors
+        logger.error(f"Failed to initialize model: {str(e)}")
+        logger.error(traceback.format_exc())
+
+        # Check if it's an authentication issue
+        if "authentication" in str(e).lower() or "access" in str(e).lower() or "token" in str(e).lower():
+            logger.info("Appears to be an authentication issue, launching authentication UI")
+            create_auth_ui()
+        else:
+            # For other errors, still try the authentication UI as a fallback
+            logger.info("Launching authentication UI as fallback")
+            create_auth_ui()

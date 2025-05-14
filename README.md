@@ -44,16 +44,16 @@ There are three ways to authenticate:
 
 1. Run the application without authentication:
 ```bash
-python run.py
+python app.py
 ```
 2. If you're not authenticated, an authentication UI will appear
 3. Enter your Hugging Face token and click "Authenticate"
-4. Restart the application after successful authentication
+4. The application will automatically transition to the main UI after successful authentication
 
 ### Option 2: Use the command-line argument
 
 ```bash
-python run.py --token YOUR_HF_TOKEN
+python app.py --token YOUR_HF_TOKEN
 ```
 
 ### Option 3: Set an environment variable
@@ -61,18 +61,18 @@ python run.py --token YOUR_HF_TOKEN
 ```bash
 # On Windows
 set HF_TOKEN=YOUR_HF_TOKEN
-python run.py
+python app.py
 
 # On Linux/Mac
 export HF_TOKEN=YOUR_HF_TOKEN
-python run.py
+python app.py
 ```
 
 ## Usage
 
 1. Run the application (with authentication as described above):
 ```bash
-python run.py
+python app.py
 ```
 
 2. Open your web browser and navigate to `http://127.0.0.1:7860`
@@ -87,12 +87,14 @@ python run.py
 
 5. Click "Generate Audio" and wait for the result
 
+> **Note**: After successful authentication, the application will automatically transition to the main UI. You no longer need to restart the application manually.
+
 ### Command-line Options
 
 The application supports several command-line options for debugging and configuration:
 
 ```bash
-python run.py --help
+python app.py --help
 ```
 
 Available options:
@@ -120,6 +122,18 @@ Additionally, the UI displays generation time for each audio sample.
 - Try different CFG scales to control how closely the output follows your prompt
 - Use more steps for higher quality (but slower) generation
 - Save seeds you like to recreate similar outputs
+
+## Troubleshooting
+
+### Common Issues
+
+- **"NoneType object has no attribute 'pretransform'"**: This error occurs when the model fails to load properly. Make sure you're authenticated with a valid Hugging Face token and have access to the model.
+
+- **Authentication Errors**: Make sure you have requested and been granted access to the model on Hugging Face Hub.
+
+- **CUDA Out of Memory**: Try reducing the duration or running on a GPU with more VRAM.
+
+- **Model Loading Errors**: Ensure you have a stable internet connection for downloading the model weights.
 
 ## Limitations
 
