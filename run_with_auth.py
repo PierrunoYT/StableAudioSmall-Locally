@@ -35,6 +35,8 @@ def main():
             print("\nStarting Stable Audio application...")
             
             # Import the necessary modules
+            # First import the seed patch to fix the int32 overflow issue
+            import seed_patch
             import app
             from app import create_ui, load_model
             import sys

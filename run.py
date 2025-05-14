@@ -1,5 +1,7 @@
 import argparse
 import os
+# Import our patch to fix the int32 seed overflow issue
+import seed_patch
 from app import create_ui, load_model, create_auth_ui
 from utils import set_log_level, print_system_info, log_memory_usage, logger
 

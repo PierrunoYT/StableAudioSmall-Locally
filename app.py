@@ -6,7 +6,11 @@ import traceback
 import gradio as gr
 from einops import rearrange
 from stable_audio_tools import get_pretrained_model
+
+# Import our patch to fix the int32 seed overflow issue
+import seed_patch
 from stable_audio_tools.inference.generation import generate_diffusion_cond
+
 from utils import logger, Timer, log_memory_usage, timeit
 from auth import login_with_token, login_with_env_token, is_authenticated, check_model_access
 
@@ -123,10 +127,13 @@ def generate_audio(
 
         # Set seed for reproducibility
         if seed == -1:
-            seed = torch.randint(0, 2**32 - 1, (1,)).item()
+            # Use a smaller maximum value to avoid int32 overflow
+            seed = torch.randint(0, 2**31 - 1, (1,)).item()
             logger.debug(f"Generated random seed: {seed}")
         else:
-            logger.debug(f"Using provided seed: {seed}")
+            # Ensure seed is within int32 bounds
+            seed = int(seed) % (2**31 - 1)
+            logger.debug(f"Using provided seed (adjusted): {seed}")
 
         torch.manual_seed(seed)
 
