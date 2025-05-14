@@ -6,6 +6,9 @@ labels: bug, seed-overflow
 assignees: ''
 ---
 
+> **Note**: This issue has already been reported at [Issue #195](https://github.com/Stability-AI/stable-audio-tools/issues/195). Please follow that issue for updates.
+
+
 ## Bug Description
 When generating audio with Stable Audio, I encountered an error related to random seed generation: `high is out of bounds for int32`. This error occurs in the `stable_audio_tools.inference.generation.generate_diffusion_cond` function when attempting to generate a random seed using NumPy.
 

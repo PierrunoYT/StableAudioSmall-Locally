@@ -141,6 +141,11 @@ Additionally, the UI displays generation time for each audio sample.
   3. If using the authentication UI, make sure to restart the application after successful authentication
   4. Check that you have requested and been granted access to the model on Hugging Face Hub
 
+- **"high is out of bounds for int32"**: This error occurs during random seed generation. It happens in the stable-audio-tools library when trying to generate random numbers outside the int32 range. Our application includes a patch (`seed_patch.py`) that fixes this issue by:
+  1. Limiting random seeds to a safe range (max 2^31-1)
+  2. Adjusting user-provided seeds to be within int32 bounds
+  3. This issue has been reported to the upstream repository: [Issue #195](https://github.com/Stability-AI/stable-audio-tools/issues/195)
+
 - **Authentication Errors**: Make sure you have requested and been granted access to the model on Hugging Face Hub.
 
 - **CUDA Out of Memory**: Try reducing the duration or running on a GPU with more VRAM.
