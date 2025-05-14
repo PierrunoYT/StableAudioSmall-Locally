@@ -8,11 +8,18 @@ Create a Gradio web UI for Stability AI's Stable Audio tools based on the offici
 ### Files Created
 - `app.py`: Main application file containing the Gradio UI and audio generation logic
 - `run.py`: Script to run the application with command-line arguments
+- `auth.py`: Authentication module for Hugging Face Hub
 - `README.md`: Documentation for the project
 - `requirements.txt`: List of required packages
+- `utils.py`: Utility functions for logging, timing, and system information
 
 ### Features Implemented
 - Text-to-audio generation using the stable-audio-open-small model
+- Authentication with Hugging Face Hub for accessing the gated model
+- Multiple authentication methods:
+  - Authentication UI
+  - Command-line token argument
+  - Environment variable
 - Adjustable parameters:
   - Duration (1-11 seconds)
   - Sampling steps

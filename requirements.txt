@@ -2,5 +2,6 @@ gradio>=5.20.0
 torch>=2.5.1
 torchaudio>=2.5.1
 stable-audio-tools>=0.0.19
+huggingface_hub>=0.20.3
 einops>=0.8.1
 psutil>=5.9.0

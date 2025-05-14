@@ -1,5 +1,6 @@
 import argparse
-from app import create_ui, load_model
+import os
+from app import create_ui, load_model, create_auth_ui
 from utils import set_log_level, print_system_info, log_memory_usage, logger
 
 if __name__ == "__main__":
@@ -12,6 +13,7 @@ if __name__ == "__main__":
                         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
                         help="Set logging level")
     parser.add_argument("--show-system-info", action="store_true", help="Display system information on startup")
+    parser.add_argument("--token", type=str, help="Hugging Face token for authentication")
     args = parser.parse_args()
 
     # Configure logging
@@ -26,22 +28,33 @@ if __name__ == "__main__":
 
     logger.info("Starting Stable Audio Web UI")
 
+    # Set token from command line to environment variable if provided
+    if args.token:
+        os.environ["HF_TOKEN"] = args.token
+        logger.info("Using token from command line")
+
     # Load model
     global model, model_config, sample_rate, sample_size
-    logger.info("Loading model...")
-    model, model_config, sample_rate, sample_size = load_model()
+    logger.info("Initializing Stable Audio...")
+    try:
+        # Try to load the model with authentication
+        model, model_config, sample_rate, sample_size = load_model()
 
-    # Log memory usage after model loading
-    if args.debug:
-        log_memory_usage("Memory usage after model loading")
+        # Log memory usage after model loading
+        if args.debug:
+            log_memory_usage("Memory usage after model loading")
 
-    # Create and launch UI
-    logger.info("Creating UI...")
-    app = create_ui()
+        # Create and launch UI
+        logger.info("Creating UI...")
+        app = create_ui()
 
-    logger.info(f"Launching server on {args.server_name}:{args.port} (share={args.share})")
-    app.launch(
-        server_name=args.server_name,
-        server_port=args.port,
-        share=args.share
-    )
+        logger.info(f"Launching server on {args.server_name}:{args.port} (share={args.share})")
+        app.launch(
+            server_name=args.server_name,
+            server_port=args.port,
+            share=args.share
+        )
+    except Exception as e:
+        logger.error(f"Failed to initialize model: {str(e)}")
+        # If model loading fails, create a UI with authentication
+        create_auth_ui()

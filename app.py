@@ -8,6 +8,7 @@ from einops import rearrange
 from stable_audio_tools import get_pretrained_model
 from stable_audio_tools.inference.generation import generate_diffusion_cond
 from utils import logger, Timer, log_memory_usage, timeit
+from auth import login_with_token, login_with_env_token, is_authenticated, check_model_access
 
 # Check for CUDA availability
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -22,9 +23,39 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 logger.debug(f"Output directory: {os.path.abspath(OUTPUT_DIR)}")
 
 @timeit
-def load_model():
-    """Load the Stable Audio model"""
+def load_model(token=None):
+    """Load the Stable Audio model
+
+    Args:
+        token (str, optional): Hugging Face token for authentication. Defaults to None.
+
+    Returns:
+        tuple: (model, model_config, sample_rate, sample_size) if successful
+
+    Raises:
+        Exception: If authentication fails or model loading fails
+    """
     logger.info(f"Loading model {MODEL_ID}...")
+
+    # Try to authenticate with the provided token or environment variable
+    if token:
+        logger.info("Authenticating with provided token...")
+        auth_success = login_with_token(token)
+    else:
+        # Try to authenticate with environment variable
+        logger.info("Checking for authentication...")
+        auth_success = login_with_env_token() or is_authenticated()
+
+    if not auth_success:
+        error_msg = f"Authentication failed. Please provide a valid Hugging Face token with access to {MODEL_ID}."
+        logger.error(error_msg)
+        raise ValueError(error_msg)
+
+    # Check if the user has access to the model
+    if not check_model_access(MODEL_ID):
+        error_msg = f"You don't have access to the model {MODEL_ID}. Please request access on the Hugging Face Hub."
+        logger.error(error_msg)
+        raise ValueError(error_msg)
 
     try:
         with Timer("model_download"):
@@ -296,11 +327,78 @@ def create_ui():
 
     return app
 
-# Load model globally
-print("Initializing Stable Audio...")
-model, model_config, sample_rate, sample_size = load_model()
+@timeit
+def create_auth_ui():
+    """Create a Gradio UI for authentication"""
+    logger.debug("Creating authentication UI")
+
+    with gr.Blocks(title="Stable Audio Authentication") as auth_app:
+        gr.Markdown("# 🔐 Stable Audio Authentication")
+        gr.Markdown(f"""
+        The model `{MODEL_ID}` requires authentication to access.
+
+        This is a gated model on Hugging Face Hub that requires you to:
+        1. Have a Hugging Face account
+        2. Request access to the model on the [model page](https://huggingface.co/{MODEL_ID})
+        3. Generate an access token from your [Hugging Face settings](https://huggingface.co/settings/tokens)
+        """)
+
+        with gr.Row():
+            token_input = gr.Textbox(
+                label="Hugging Face Access Token",
+                placeholder="Enter your Hugging Face access token...",
+                type="password"
+            )
+            auth_btn = gr.Button("🔑 Authenticate", variant="primary")
+
+        auth_status = gr.Textbox(label="Authentication Status", interactive=False)
+
+        def authenticate_and_load(token):
+            if not token or token.strip() == "":
+                return "❌ Please enter a valid token"
+
+            try:
+                global model, model_config, sample_rate, sample_size
+                model, model_config, sample_rate, sample_size = load_model(token)
+                return "✅ Authentication successful! You can now close this tab and restart the application."
+            except Exception as e:
+                return f"❌ Authentication failed: {str(e)}"
+
+        auth_btn.click(
+            fn=authenticate_and_load,
+            inputs=[token_input],
+            outputs=[auth_status]
+        )
+
+        gr.Markdown("""
+        ## Instructions
+
+        1. Go to [Hugging Face Settings](https://huggingface.co/settings/tokens) to create a new token
+        2. Copy the token and paste it above
+        3. Click "Authenticate"
+        4. If successful, restart the application
+
+        You can also set the `HF_TOKEN` environment variable to your token to avoid this step in the future.
+        """)
+
+    logger.info("Launching authentication UI")
+    auth_app.launch(share=False)
+
+# Global variables for model
+model = None
+model_config = None
+sample_rate = None
+sample_size = None
 
 # Create and launch the UI
 if __name__ == "__main__":
-    app = create_ui()
-    app.launch(share=False)
+    print("Initializing Stable Audio...")
+    try:
+        # Try to load the model with environment authentication
+        model, model_config, sample_rate, sample_size = load_model()
+        app = create_ui()
+        app.launch(share=False)
+    except Exception as e:
+        logger.error(f"Failed to initialize model: {str(e)}")
+        # If model loading fails, create a UI with authentication
+        create_auth_ui()

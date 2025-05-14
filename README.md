@@ -27,12 +27,50 @@ cd stable-audio-web-ui
 
 2. Install the required packages:
 ```bash
-pip install gradio torch torchaudio stable-audio-tools
+pip install gradio torch torchaudio stable-audio-tools huggingface_hub
+```
+
+## Authentication
+
+The Stable Audio model (`stabilityai/stable-audio-open-small`) is a gated model on Hugging Face Hub, which means you need to:
+
+1. Have a Hugging Face account
+2. Request access to the model on the [model page](https://huggingface.co/stabilityai/stable-audio-open-small)
+3. Generate an access token from your [Hugging Face settings](https://huggingface.co/settings/tokens)
+
+There are three ways to authenticate:
+
+### Option 1: Use the authentication UI
+
+1. Run the application without authentication:
+```bash
+python run.py
+```
+2. If you're not authenticated, an authentication UI will appear
+3. Enter your Hugging Face token and click "Authenticate"
+4. Restart the application after successful authentication
+
+### Option 2: Use the command-line argument
+
+```bash
+python run.py --token YOUR_HF_TOKEN
+```
+
+### Option 3: Set an environment variable
+
+```bash
+# On Windows
+set HF_TOKEN=YOUR_HF_TOKEN
+python run.py
+
+# On Linux/Mac
+export HF_TOKEN=YOUR_HF_TOKEN
+python run.py
 ```
 
 ## Usage
 
-1. Run the application:
+1. Run the application (with authentication as described above):
 ```bash
 python run.py
 ```
@@ -64,6 +102,7 @@ Available options:
 - `--debug`: Enable debug mode with verbose logging
 - `--log-level {DEBUG,INFO,WARNING,ERROR,CRITICAL}`: Set logging level (default: INFO)
 - `--show-system-info`: Display system information on startup
+- `--token TOKEN`: Hugging Face token for authentication
 
 ### Debugging Features
 
