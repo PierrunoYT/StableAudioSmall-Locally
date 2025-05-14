@@ -1,9 +1,9 @@
 ---
-name: Int32 Overflow Error
-about: Report an issue with "high is out of bounds for int32" in stable-audio-tools
-title: '[BUG] Int32 Overflow Error in Random Seed Generation'
-labels: bug, seed-overflow
-assignees: ''
+name: "Int32 Overflow Error"
+about: "Report an issue with 'high is out of bounds for int32' in stable-audio-tools"
+title: "[BUG] Int32 Overflow Error in Random Seed Generation"
+labels: ["bug", "seed-overflow"]
+assignees: []
 ---
 
 > **Note**: This issue has already been reported at [Issue #195](https://github.com/Stability-AI/stable-audio-tools/issues/195). Please follow that issue for updates.
