@@ -28,3 +28,4 @@ build/
 # Specific files to ignore
 int32_overflow_issue_markdown.md
 .github/
+TASK.md
