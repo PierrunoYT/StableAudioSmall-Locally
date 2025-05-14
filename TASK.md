@@ -41,3 +41,13 @@ Create a Gradio web UI for Stability AI's Stable Audio tools based on the offici
 - Add audio editing capabilities
 - Support for model fine-tuning
 - Add visualization of the generated audio waveform
+
+## Debugging Features Added
+- Comprehensive logging system with configurable log levels
+- System information display (hardware, CUDA, memory)
+- Memory usage tracking during model loading and generation
+- Timing information for all major operations
+- Error handling with detailed error messages
+- UI-based debugging tools in a collapsible section
+- Generation time display for each audio sample
+- Command-line options for debugging configuration

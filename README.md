@@ -34,7 +34,7 @@ pip install gradio torch torchaudio stable-audio-tools
 
 1. Run the application:
 ```bash
-python app.py
+python run.py
 ```
 
 2. Open your web browser and navigate to `http://127.0.0.1:7860`
@@ -48,6 +48,32 @@ python app.py
    - **Seed**: Set a specific seed for reproducible results, or -1 for random
 
 5. Click "Generate Audio" and wait for the result
+
+### Command-line Options
+
+The application supports several command-line options for debugging and configuration:
+
+```bash
+python run.py --help
+```
+
+Available options:
+- `--share`: Create a publicly shareable link
+- `--port PORT`: Port to run the app on (default: 7860)
+- `--server-name SERVER_NAME`: Server name (default: 127.0.0.1)
+- `--debug`: Enable debug mode with verbose logging
+- `--log-level {DEBUG,INFO,WARNING,ERROR,CRITICAL}`: Set logging level (default: INFO)
+- `--show-system-info`: Display system information on startup
+
+### Debugging Features
+
+The application includes a "Debug Information" section (collapsed by default) that provides:
+
+- System information (platform, Python version, CUDA availability, etc.)
+- Current memory usage (RAM and GPU if available)
+- Model information (parameters, sample rate, etc.)
+
+Additionally, the UI displays generation time for each audio sample.
 
 ## Tips for Better Results
 
