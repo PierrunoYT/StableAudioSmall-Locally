@@ -51,10 +51,10 @@ if __name__ == "__main__":
 
         # Create and launch UI
         logger.info("Creating UI...")
-        app = create_ui()
+        ui = create_ui()
 
         logger.info(f"Launching server on {args.server_name}:{args.port} (share={args.share})")
-        app.launch(
+        ui.launch(
             server_name=args.server_name,
             server_port=args.port,
             share=args.share

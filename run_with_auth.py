@@ -37,14 +37,14 @@ def main():
             # Import the necessary modules
             # First import the seed patch to fix the int32 overflow issue
             import seed_patch
-            import app
+            import app as app_module
             from app import create_ui, load_model
             import sys
             
             # Update the global model variables directly
             try:
                 print("Loading model...")
-                app.model, app.model_config, app.sample_rate, app.sample_size = load_model()
+                app_module.model, app_module.model_config, app_module.sample_rate, app_module.sample_size = load_model()
                 
                 # Create and launch UI
                 print("Creating UI...")
@@ -58,8 +58,7 @@ def main():
                 print(f"Launching server on port {port} (share={share})...")
                 ui.launch(
                     server_port=port,
-                    share=share,
-                    debug=debug
+                    share=share
                 )
             except KeyboardInterrupt:
                 print("\nApplication stopped by user.")
