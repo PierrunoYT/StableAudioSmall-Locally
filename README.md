@@ -89,8 +89,8 @@ python run.py
 
 4. Adjust parameters as needed:
    - **Duration**: Length of the generated audio (1-11 seconds)
-   - **Sampling Steps**: More steps generally produce higher quality but take longer
-   - **CFG Scale**: Controls how closely the output follows your prompt
+   - **Sampling Steps**: Start with 8, the model's recommended setting
+   - **CFG Scale**: Start with 1.0 (no classifier-free guidance), as recommended for this model
    - **Seed**: Set a specific seed for reproducible results, or -1 for random
 
 5. Click "Generate Audio" and wait for the result
@@ -127,8 +127,9 @@ Additionally, the UI displays generation time for each audio sample.
 ## Tips for Better Results
 
 - Be specific about instruments, tempo, and style in your prompts
-- Try different CFG scales to control how closely the output follows your prompt
-- Use more steps for higher quality (but slower) generation
+- Start with 8 sampling steps and CFG scale 1.0, matching the [official model recipe](https://huggingface.co/stabilityai/stable-audio-open-small#using-with-stable-audio-tools). The app uses the model's recommended ping-pong sampler.
+- Other step counts and CFG scales are experimental; more steps or stronger guidance do not necessarily improve this model's output.
+- Audio is cropped to the requested duration before normalization, so the unused end of the model's fixed-length buffer is not saved or included in gain calculation.
 - Save seeds you like to recreate similar outputs
 
 ## Troubleshooting
@@ -151,6 +152,16 @@ Additionally, the UI displays generation time for each audio sample.
 - **CUDA Out of Memory**: Try reducing the duration or running on a GPU with more VRAM.
 
 - **Model Loading Errors**: Ensure you have a stable internet connection for downloading the model weights.
+
+## Regression Tests
+
+With PyTorch, Torchaudio (including a WAV backend such as `soundfile`), NumPy, Einops, and Psutil installed:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+These tests run the app's generation function and seed wrapper using synthetic model output, real tensors, and WAV save/load. They verify sampler/guidance defaults, seed forwarding, exact duration cropping before normalization, and silent-output handling. They do not download gated model weights or verify perceptual audio quality.
 
 ## Limitations
 

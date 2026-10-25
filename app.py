@@ -77,7 +77,7 @@ def load_model(token=None):
 
         with Timer("model_to_device"):
             logger.debug(f"Moving model to {device}...")
-            model = model.to(device)
+            model = model.to(device).eval()
             logger.debug(f"Model moved to {device}")
 
         # Log memory usage after moving model to device
@@ -107,7 +107,7 @@ def generate_audio(
     prompt,
     duration=5.0,
     steps=8,
-    cfg_scale=3.0,
+    cfg_scale=1.0,
     seed=-1,
     progress=gr.Progress()
 ):
@@ -164,6 +164,8 @@ def generate_audio(
                 conditioning=conditioning,
                 sample_size=sample_size,
                 cfg_scale=cfg_scale,
+                sampler_type="pingpong",
+                seed=seed,
                 device=device
             )
             logger.debug(f"Diffusion completed, output shape: {output.shape}")
@@ -171,16 +173,23 @@ def generate_audio(
         progress(0.8, desc="Processing audio...")
         logger.debug("Post-processing audio")
 
+        # Timing conditioning does not crop the model's fixed-length buffer.
+        # Discard the unrequested tail before it can affect peak normalization.
+        output = output[..., :int(duration * sample_rate)]
+
         # Rearrange audio batch to a single sequence
         with Timer("audio_rearrange"):
             output = rearrange(output, "b d n -> d (b n)")
             logger.debug(f"Audio rearranged, new shape: {output.shape}")
 
-        # Peak normalize, clip, convert to int16
+        # Peak normalize and clip; preserve silence without division by zero.
         with Timer("audio_normalize"):
+            output = output.to(torch.float32)
             max_value = torch.max(torch.abs(output))
             logger.debug(f"Peak value before normalization: {max_value.item():.4f}")
-            output = output.to(torch.float32).div(max_value).clamp(-1, 1)
+            if max_value > 0:
+                output = output.div(max_value)
+            output = output.clamp(-1, 1)
             logger.debug("Audio normalized and clamped")
 
         # Save to file
@@ -239,7 +248,7 @@ def create_ui():
                     cfg_scale = gr.Slider(
                         minimum=1.0,
                         maximum=10.0,
-                        value=3.0,
+                        value=1.0,
                         step=0.1,
                         label="CFG Scale"
                     )
@@ -313,11 +322,11 @@ def create_ui():
         # Examples
         gr.Examples(
             examples=[
-                ["128 BPM tech house drum loop with deep bass", 5.0, 8, 3.0, -1],
-                ["Ambient synth pad with reverb", 8.0, 12, 3.0, -1],
-                ["Acoustic guitar playing a folk melody", 6.0, 10, 3.0, -1],
-                ["Birds chirping in a forest", 4.0, 8, 3.0, -1],
-                ["Cinematic orchestral music with strings and brass", 10.0, 15, 3.0, -1]
+                ["128 BPM tech house drum loop with deep bass", 5.0, 8, 1.0, -1],
+                ["Ambient synth pad with reverb", 8.0, 8, 1.0, -1],
+                ["Acoustic guitar playing a folk melody", 6.0, 8, 1.0, -1],
+                ["Birds chirping in a forest", 4.0, 8, 1.0, -1],
+                ["Cinematic orchestral music with strings and brass", 10.0, 8, 1.0, -1]
             ],
             inputs=[prompt, duration, steps, cfg_scale, seed],
             outputs=[output_audio, seed_output, generation_time],
@@ -368,8 +377,8 @@ def create_ui():
         gr.Markdown("""
         ## Tips for better results:
         - Be specific about the instruments, tempo, and style
-        - Try different CFG scales to control how closely the output follows your prompt
-        - Use more steps for higher quality (but slower) generation
+        - Start with the model's recommended 8 sampling steps and CFG scale 1.0
+        - Other step counts and CFG scales are experimental, not guaranteed quality improvements
         - Save seeds you like to recreate similar outputs
         """)
 
