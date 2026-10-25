@@ -10,7 +10,8 @@ from stable_audio_tools.inference.generation import generate_diffusion_cond as o
 logger = logging.getLogger("stable-audio")
 
 def patched_generate_diffusion_cond(model, steps=10, batch_size=1, conditioning=None, 
-                                   sample_size=524288, cfg_scale=3.0, seed=-1, device="cuda"):
+                                   sample_size=524288, cfg_scale=3.0, seed=-1, device="cuda",
+                                   **sampler_kwargs):
     """
     Patched version of generate_diffusion_cond that fixes the int32 overflow issue.
     
@@ -36,7 +37,8 @@ def patched_generate_diffusion_cond(model, steps=10, batch_size=1, conditioning=
         sample_size=sample_size, 
         cfg_scale=cfg_scale, 
         seed=seed, 
-        device=device
+        device=device,
+        **sampler_kwargs
     )
 
 # Monkey patch the original function
